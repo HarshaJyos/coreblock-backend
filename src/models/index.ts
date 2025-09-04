@@ -41,21 +41,21 @@ interface IAuthor {
 }
 
 // Category Interface
-interface ICategory {
-  id: string;
+interface ICategory extends Document {
   name: string;
   slug: string;
   description?: string;
-  parentId?: string;
+  parentId?: mongoose.Types.ObjectId;
   createdAt: string;
   updatedAt: string;
 }
 
 // Tag Interface
-interface ITag {
-  id: string;
+interface ITag extends Document {
   name: string;
   slug: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Metadata Interface
@@ -79,8 +79,8 @@ interface IBlogPost extends Document {
   excerpt: string;
   content: RootNode;
   author: IAuthor;
-  categories: ICategory[];
-  tags: ITag[];
+  categories: mongoose.Types.ObjectId[];
+  tags: mongoose.Types.ObjectId[];
   metadata: IMetadata;
   status: "draft" | "published" | "archived";
   createdAt: string;
@@ -108,20 +108,20 @@ const authorSchema = new Schema<IAuthor>({
 
 // Category Schema
 const categorySchema = new Schema<ICategory>({
-  id: { type: String, default: uuidv4, unique: true },
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
   description: { type: String },
-  parentId: { type: String },
+  parentId: { type: Schema.Types.ObjectId, ref: "Category" },
   createdAt: { type: String, default: () => new Date().toISOString() },
   updatedAt: { type: String, default: () => new Date().toISOString() },
 });
 
 // Tag Schema
 const tagSchema = new Schema<ITag>({
-  id: { type: String, default: uuidv4, unique: true },
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
+  createdAt: { type: String, default: () => new Date().toISOString() },
+  updatedAt: { type: String, default: () => new Date().toISOString() },
 });
 
 // Metadata Schema
@@ -145,8 +145,8 @@ const blogPostSchema = new Schema<IBlogPost>({
   excerpt: { type: String, required: true },
   content: { type: Schema.Types.Mixed, required: true },
   author: { type: authorSchema, required: true },
-  categories: { type: [categorySchema] },
-  tags: { type: [tagSchema] },
+  categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
+  tags: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
   metadata: { type: metadataSchema },
   status: {
     type: String,
@@ -158,6 +158,23 @@ const blogPostSchema = new Schema<IBlogPost>({
   publishedAt: { type: String },
 });
 
-const BlogPost = mongoose.model<IBlogPost>("BlogPost", blogPostSchema);
+// Indexes for performance
+blogPostSchema.index({ slug: 1 });
+blogPostSchema.index({ status: 1, publishedAt: -1 });
+blogPostSchema.index({ categories: 1 });
+blogPostSchema.index({ tags: 1 });
+blogPostSchema.index({ title: "text", excerpt: "text" }); // Text index for search
 
-export { BlogPost, IBlogPost, IAuthor, ICategory, ITag, IMetadata, RootNode };
+categorySchema.index({ slug: 1 });
+categorySchema.index({ name: 1 });
+categorySchema.index({ parentId: 1 });
+
+tagSchema.index({ slug: 1 });
+tagSchema.index({ name: 1 });
+
+// Models
+const BlogPost = mongoose.model<IBlogPost>("BlogPost", blogPostSchema);
+const Category = mongoose.model<ICategory>("Category", categorySchema);
+const Tag = mongoose.model<ITag>("Tag", tagSchema);
+
+export { BlogPost, Category, Tag, IBlogPost, IAuthor, ICategory, ITag, IMetadata, RootNode };

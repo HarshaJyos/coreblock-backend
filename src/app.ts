@@ -10,6 +10,9 @@ import { logger } from "./utils/logger";
 import authRoutes from "./routes/authRoutes";
 import env from "./config/env";
 import { sanitizeInput } from "./middlewares/sanitizeMiddleware";
+import categoryRoutes from "./routes/categoryRoutes";
+import tagRoutes from "./routes/tagRoutes";
+import blogRoutes from "./routes/blogRoutes";
 
 const app: Application = express();
 
@@ -35,6 +38,9 @@ app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) }
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/tags", tagRoutes);
+app.use("/api/blogs", blogRoutes);
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });

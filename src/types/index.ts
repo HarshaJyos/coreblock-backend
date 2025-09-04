@@ -1,4 +1,5 @@
 import { Request } from "express";
+import { Types } from "mongoose";
 
 interface RootNode {
   type: "root";
@@ -38,19 +39,21 @@ interface IAuthor {
 }
 
 interface ICategory {
-  id: string;
+  _id?: Types.ObjectId;
   name: string;
   slug: string;
   description?: string;
-  parentId?: string;
+  parentId?: Types.ObjectId;
   createdAt: string;
   updatedAt: string;
 }
 
 interface ITag {
-  id: string;
+  _id?: Types.ObjectId;
   name: string;
   slug: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface IMetadata {
@@ -72,8 +75,8 @@ interface IBlogPost {
   excerpt: string;
   content: RootNode;
   author: IAuthor;
-  categories: ICategory[];
-  tags: ITag[];
+  categories: Types.ObjectId[];
+  tags: Types.ObjectId[];
   metadata: IMetadata;
   status: "draft" | "published" | "archived";
   createdAt: string;
